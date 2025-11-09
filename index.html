@@ -3,172 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Directory - Card View (Fully Featured)</title>
+    <title>Employee Directory - Ultimate Profile View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        /* --- General Layout & Fonts --- */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f4f8; /* Softer background */
-        }
-        
-        /* --- Header Improvements --- */
-        .header-container {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0; /* Subtle separator */
-        }
-        h1 {
-            color: #1e3a8a;
-            margin-bottom: 8px;
-            font-weight: 700; /* Heavier font weight */
-        }
-        #staff-count-display {
-            font-size: 1.1em;
-            color: #4b5563;
-            font-weight: 600;
-            text-align: center;
+        /* --- Base Setup --- */
+        :root {
+            --color-primary: #1a73e8; /* Google Blue */
+            --color-primary-dark: #0c4a6e;
+            --color-background: #f8faff; /* Very light, cool white */
+            --color-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --color-border: #e2e8f0;
         }
 
-        /* --- Filters Container Improvements --- */
+        /* --- General Layout & Fonts --- */
+        body {
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-background); 
+            color: #333;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- Navigation/Header Improvements --- */
+        .navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            padding: 15px 30px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 {
+            color: var(--color-primary-dark); 
+            margin: 0;
+            font-weight: 800;
+            font-size: 1.8em;
+        }
+        #staff-count-display {
+            font-size: 1em;
+            color: #64748b;
+            font-weight: 500;
+            padding: 5px 10px;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+        }
+
+        /* --- Filters Container UX/UI (Control Panel Aesthetic) --- */
         #filter-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px; /* Increased gap */
+            gap: 20px;
             margin-bottom: 40px;
-            padding: 20px; /* Increased padding */
+            padding: 30px; /* Increased padding */
             background-color: #ffffff;
-            border-radius: 12px; /* Softer corners */
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* Stronger but softer shadow */
-            align-items: flex-end; /* Align inputs/selects to the bottom */
-            justify-content: center;
+            border-radius: 16px;
+            box-shadow: var(--color-shadow), inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle inner shadow */
+            align-items: flex-start;
         }
         .filter-group {
             display: flex;
             flex-direction: column;
-            min-width: 240px; /* Slightly wider filter boxes */
+            flex-grow: 1;
+            min-width: 200px; 
+            border-right: 1px solid #f1f5f9; /* Subtle divider */
+            padding-right: 20px;
+        }
+        .filter-group:last-child {
+             border-right: none;
+             padding-right: 0;
+        }
+        .filter-group.search-group {
+            flex-grow: 3;
+            min-width: 300px;
         }
         .filter-group label {
-            font-weight: 600; /* Bolder label */
-            color: #334155;
-            margin-bottom: 6px;
-            font-size: 0.95em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            letter-spacing: 0.03em;
         }
         .filter-group input, .filter-group select {
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px; /* Slightly more rounded */
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px; 
             font-size: 1em;
             transition: all 0.3s;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06); /* Inner shadow for depth */
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
         }
         .filter-group input:focus, .filter-group select:focus {
-            border-color: #3b82f6;
+            border-color: var(--color-primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.03);
         }
 
         /* --- Card Grid Layout --- */
         #data-container {
-            /* Default: Fit as many 320px cards as possible */
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 25px; /* Increased gap */
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 30px; 
             margin-bottom: 30px;
         }
         
-        /* 📱 MOBILE OPTIMIZATION: TWO CARDS IN SMALL RESPONSIVE VIEW */
-        /* Targets screens up to 768px wide (standard tablet portrait/large phone) */
-        @media (max-width: 768px) {
-            #data-container {
-                /* Force two columns, or one if the screen is too small */
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-                gap: 15px; /* Reduce gap on small screens */
-            }
-            .filter-group {
-                min-width: 100%; /* Make filters stack cleanly */
-            }
-            body {
-                padding: 10px; /* Reduce overall padding */
-            }
-            /* Ensure cards have space on narrowest screens (below 400px) */
-            @media (max-width: 450px) {
-                #data-container {
-                    grid-template-columns: 1fr; /* Force single column on very narrow screens */
-                }
-            }
-        }
-        /* END MOBILE OPTIMIZATION */
-
-
-        #data-container.loading {
-            text-align: center;
-            font-size: 1.2em;
-            color: #6b7280;
-            padding: 50px;
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: center;
-        }
-        
-        /* --- Individual Card Styling (Lazy Load) --- */
+        /* --- Individual Card Styling (Ultimate Minimal Profile) --- */
         .employee-card {
             background: #ffffff;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0; /* Subtle border */
+            border-radius: 16px;
+            border: 1px solid var(--color-border); /* Subtle initial border */
             overflow: hidden;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Elevated shadow */
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s, outline 0.3s;
             display: flex;
             flex-direction: column;
+            cursor: pointer;
+            position: relative; 
+            /* padding-top: 50px;  */
+            text-align: center;
         }
+        /* Hover state polish */
         .employee-card:hover {
-            transform: translateY(-8px); /* More noticeable lift */
-            box-shadow: 0 18px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+            border-color: #a5c3f6; /* Subtle blue highlight on interaction */
         }
-        .lazy-card {
-            opacity: 0;
-            transform: translateY(30px); /* Slower, more dramatic slide-up */
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out, box-shadow 0.3s;
-        }
-        .lazy-card.visible {
-            opacity: 1;
-            transform: translateY(0);
+        /* Accessibility Focus State */
+        .employee-card:focus-within {
+            outline: 4px solid rgba(26, 115, 232, 0.5); /* Prominent, accessible blue glow */
+            outline-offset: 2px;
         }
 
-        /* Card Image (No major change, ensure sharp fit) */
+
+        /* Card Header background (Pseudo-element for clean separation) */
+        .employee-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px; /* Area for the avatar to overlap */
+            background-color: #f8faff; 
+            border-bottom: 1px solid var(--color-border);
+            z-index: 1; 
+        }
+
+        /* Card Image/Avatar Container */
         .card-image-container {
-            height: 220px; /* Slightly taller image area */
+            position: relative;
+            top: 5px; /* Position relative to the top of the card */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px; 
+            height: 100px;
+            border-radius: 50%; 
             overflow: hidden;
-            background-color: #f8fafc;
+            background-color: #ffffff; 
+            border: 5px solid white; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); /* Stronger shadow on the avatar */
+            z-index: 10; /* Bring avatar to the top layer */
         }
         .card-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        
+        /* Placeholder styling for empty photo */
         .card-image[src="placeholder.jpg"] { content: none; display: block; position: relative; }
         .card-image[src="placeholder.jpg"]::before {
-             content: 'No Photo Available';
-             display: flex; justify-content: center; align-items: center;
-             width: 100%; height: 100%; color: #9ca3af; font-size: 1.2em;
+            content: '👤'; 
+            display: flex; justify-content: center; align-items: center;
+            width: 100%; height: 100%; color: #94a3b8; font-size: 3em; 
+            background-color: #e2e8f0;
         }
-        .card-content { padding: 25px; flex-grow: 1; }
-        .card-title { font-size: 1.6em; font-weight: 800; color: #1f2937; margin-bottom: 5px; }
-        .card-subtitle { font-size: 1.1em; color: #64748b; margin-bottom: 18px; }
-        .card-detail { margin-bottom: 8px; font-size: 0.95em; color: #374151; }
-        .card-detail strong { color: #111827; min-width: 120px; display: inline-block; }
-        .card-tag { 
-            background-color: #0d9488; /* Teal/cyan for a fresh look */
-            padding: 6px 12px;
-            font-size: 0.9em;
-            border-radius: 6px;
+        
+        /* Card Content Block */
+        .card-content { 
+            padding: 15px 25px 25px 25px; 
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            z-index: 5; /* Ensure content is above the pseudo-header */
+        }
+        .card-title { 
+            font-size: 1.4em; 
+            font-weight: 700; 
+            color: #1f2937; 
+            margin-bottom: 2px; 
+            margin-top: 10px; 
+        }
+        .card-subtitle { 
+            font-size: 0.95em; 
+            color: #64748b; 
+            margin-bottom: 20px; 
+            font-weight: 500;
         }
 
-        /* --- Show More Button Style --- */
+        /* Detail/Icon Block - Cleaner alignment */
+        .card-detail-group {
+            width: 100%; 
+            border-top: 1px solid #f1f5f9;
+            padding-top: 20px;
+            text-align: left; 
+        }
+        .card-detail { 
+            margin-bottom: 10px; 
+            font-size: 0.9em; 
+            color: #475569; 
+            display: flex;
+            align-items: center;
+        }
+        .card-detail:last-child {
+            margin-bottom: 0;
+        }
+        .card-detail strong { 
+            color: #1f2937; 
+            font-weight: 600; 
+            margin-left: 8px;
+            min-width: 90px; 
+        }
+        /* --- FINAL POLISH: Circle around Detail Icons --- */
+        .card-detail i {
+            color: var(--color-primary); 
+            width: 25px;
+            height: 25px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f4f8; /* Very light background for the circle */
+            border-radius: 50%;
+            text-align: center;
+            font-size: 0.9em; 
+            flex-shrink: 0; 
+        }
+
+        /* Tag Styling */
+        .card-tag { 
+            background-color: #e0f2fe; 
+            color: #0c4a6e; 
+            padding: 8px 15px;
+            font-size: 0.85em;
+            border-radius: 20px; 
+            font-weight: 600;
+            margin-top: 25px; 
+            align-self: flex-start; 
+        }
+
+        /* --- Show More Button Style (Gradient & Enhanced) --- */
         #show-more-container {
             text-align: center;
             padding: 30px 0 50px 0;
@@ -176,58 +266,170 @@
             justify-content: center;
         }
         #show-more-btn {
-            padding: 14px 35px;
+            padding: 15px 40px;
             font-size: 1.1em;
-            font-weight: 600;
-            background-color: #10b981; 
+            font-weight: 700;
+            /* Subtle gradient background */
+            background-image: linear-gradient(135deg, #1a73e8 0%, #1764cc 100%);
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+            transition: background-image 0.3s, box-shadow 0.3s, transform 0.1s;
+            box-shadow: 0 8px 20px rgba(26, 115, 232, 0.4);
             display: none;
         }
         #show-more-btn:hover {
-            background-color: #059669;
-            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.5);
+            background-image: linear-gradient(135deg, #1764cc 0%, #0d47a1 100%);
+            box-shadow: 0 10px 25px rgba(26, 115, 232, 0.5);
         }
-        #show-more-btn:focus {
-             outline: 3px solid #6ee7b7;
+        #show-more-btn:active {
+            transform: scale(0.99);
         }
+
+        /* --- SKELETON LOADER STYLES --- */
+        .skeleton-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            height: 350px; /* Fixed height to match real cards */
+            position: relative;
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .skeleton-header-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background-color: #f8faff; 
+            border-bottom: 1px solid var(--color-border);
+        }
+        .skeleton-avatar {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #e2e8f0; /* Gray circle for avatar */
+            z-index: 10;
+        }
+        .skeleton-content {
+            width: 80%;
+            padding-top: 60px; /* Space below avatar */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .skeleton-line {
+            width: 100%;
+            height: 12px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .skeleton-title {
+            width: 70%;
+            height: 20px;
+            margin-bottom: 15px;
+        }
+        .skeleton-subtitle {
+            width: 50%;
+            height: 12px;
+            margin-bottom: 25px;
+        }
+        .skeleton-tag {
+            width: 40%;
+            height: 10px;
+            margin-top: 25px;
+        }
+
+        /* Pulsing animation */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        /* Ensure the skeleton cards take up the full grid width when loading */
+        #data-container.loading {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            text-align: initial; 
+            align-items: flex-start;
+            padding: 0;
+        }
+        #data-container.loading > p,
+        #data-container.loading > i { /* Hide previous 'Loading data...' text/spinner */
+            display: none;
+        }
+
+
+        /* --- Responsive Design --- */
+        @media (max-width: 992px) {
+             .filter-group { border-right: none; padding-right: 0; }
+             #filter-container { flex-direction: column; align-items: stretch; }
+             .filter-group { min-width: 100%; }
+             .filter-group.search-group { min-width: 100%; }
+        }
+        @media (max-width: 768px) {
+            #data-container {
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 20px;
+            }
+            #data-container.loading{
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .navbar { flex-direction: column; gap: 5px; }
+            h1 { font-size: 1.5em; }
+        }
+       
     </style>
 </head>
 <body>
-    <div class="header-container">
+    <div class="navbar">
         <h1>🏢 Employee Directory | បញ្ជីបុគ្គលិក</h1>
         <span id="staff-count-display">Loading staff count...</span>
     </div>
 
-    <div id="filter-container">
-        <div class="filter-group">
-            <label for="name-search">Search Name/ID (ឈ្មោះ/អត្ថលេខ)</label>
-            <input type="text" id="name-search" placeholder="Enter name or ID...">
-        </div>
-        <div class="filter-group">
-            <label for="department-filter">Filter by Department (ផ្នែកការងារ)</label>
-            <select id="department-filter">
-                <option value="">-- All Departments --</option>
-                </select>
-        </div>
-        <div class="filter-group">
-            <label for="sort-control">Sort By</label>
-            <select id="sort-control">
-                <option value="nameKh">Name (Khmer) A-Z</option>
-                <option value="nameLatin">Name (Latin) A-Z</option>
-                <option value="idDi">ID Ascending</option>
-            </select>
-        </div>
-    </div>
+    <div class="main-container">
 
-    <div id="data-container" class="loading">Loading data...</div> 
-    
-    <div id="show-more-container">
-        <button id="show-more-btn" onclick="showMoreCards()">Show 50 More Staff</button>
+        <div id="filter-container">
+            <div class="filter-group search-group">
+                <label for="name-search">Search Name/ID (ឈ្មោះ/អត្ថលេខ)</label>
+                <input type="text" id="name-search" placeholder="Enter name, ID, or Latin name...">
+            </div>
+            <div class="filter-group">
+                <label for="department-filter">Filter by Department (ផ្នែកការងារ)</label>
+                <select id="department-filter">
+                    <option value="">-- All Departments --</option>
+                    </select>
+            </div>
+            <div class="filter-group">
+                <label for="sort-control">Sort By</label>
+                <select id="sort-control">
+                    <option value="nameKh">Name (Khmer) A-Z</option>
+                    <option value="nameLatin">Name (Latin) A-Z</option>
+                    <option value="idDi">ID Ascending</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="data-container" class="loading">
+            </div> 
+        
+        <div id="show-more-container">
+            <button id="show-more-btn" onclick="showMoreCards()">Show 50 More Staff</button>
+        </div>
     </div>
 
     <script>
@@ -264,12 +466,42 @@
         
         function parseCSV(csvText) {
             const rows = csvText.split('\n').filter(row => row.trim() !== '');
-            return rows.map(row => row.split(',').map(cell => cell ? cell.trim() : ''));
+            return rows.map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell ? cell.trim().replace(/^"|"$/g, '') : ''));
+        }
+
+        // --- Skeleton Render Function (NEW) ---
+        function renderSkeleton() {
+            dataContainer.innerHTML = '';
+            dataContainer.classList.add('loading');
+            // Determine how many skeletons to show based on screen size (default 6)
+            const skeletonCount = window.innerWidth > 768 ? 6 : 4; 
+            
+            for (let i = 0; i < skeletonCount; i++) {
+                const skeletonHTML = `
+                    <div class="skeleton-card">
+                        <div class="skeleton-header-bg"></div>
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-line skeleton-title"></div>
+                            <div class="skeleton-line skeleton-subtitle"></div>
+                            <div class="skeleton-line" style="width: 80%; margin-top: 20px;"></div>
+                            <div class="skeleton-line" style="width: 75%;"></div>
+                            <div class="skeleton-line" style="width: 85%;"></div>
+                            <div class="skeleton-line skeleton-tag"></div>
+                        </div>
+                    </div>
+                `;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = skeletonHTML.trim();
+                dataContainer.appendChild(tempDiv.firstChild);
+            }
         }
 
         async function fetchDataAndDisplay() {
+            // Call the Skeleton Renderer
+            renderSkeleton(); 
+            
             try {
-                dataContainer.classList.add('loading');
                 const response = await fetch(GOOGLE_SHEETS_URL);
                 const csvText = await response.text();
                 const dataArray = parseCSV(csvText);
@@ -283,25 +515,24 @@
                     gender: row[COL_GENDER] || 'N/A',
                     nameLatin: row[COL_NAME_LATIN] || 'N/A',
                     department: row[COL_DEPARTMENT] || 'N/A',
-                    imageUrl: (row[COL_IMAGE_URL] || '').replace(/"/g, '') || 'placeholder.jpg' 
-                })).filter(employee => employee.nameKh !== 'N/A');
+                    imageUrl: (row[COL_IMAGE_URL] || '').replace(/"/g, '').trim() || 'placeholder.jpg' 
+                })).filter(employee => employee.nameKh !== 'N/A' && employee.nameLatin !== 'N/A');
 
                 countDisplay.textContent = `Total Staff: ${rawEmployeeData.length}`;
                 
                 populateDepartmentFilter(rawEmployeeData);
-                // Initial render: do not reset limit or scroll
                 filterAndRenderCards(false, false); 
                 dataContainer.classList.remove('loading');
 
             } catch (error) {
                 console.error('Error fetching or processing sheet data:', error);
                 countDisplay.textContent = 'Error loading data.';
-                dataContainer.innerHTML = 'Error loading data. Check the browser console and CSV link.';
+                dataContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #dc3545;"><i class="fas fa-exclamation-triangle"></i> Error loading data. Please check the network connection and source link.</p>';
                 dataContainer.classList.remove('loading');
             }
         }
         
-        // --- Sorting Function ---
+        // --- Sorting Function (No change) ---
         function sortData(data) {
             const sortBy = sortControl.value;
 
@@ -310,12 +541,10 @@
                 const valB = (b[sortBy] || '').toUpperCase();
 
                 if (sortBy === 'idDi') {
-                    // Treat ID as numbers for accurate sorting (if possible)
                     const numA = parseInt(valA.replace(/\D/g, '')) || 0;
                     const numB = parseInt(valB.replace(/\D/g, '')) || 0;
                     return numA - numB;
                 } else {
-                    // Standard string comparison for names
                     if (valA < valB) return -1;
                     if (valA > valB) return 1;
                     return 0;
@@ -324,8 +553,7 @@
             return data;
         }
         
-        // --- Pagination Logic ---
-        
+        // --- Pagination Logic (No change) ---
         function showMoreCards() {
             currentCardLimit += CARDS_PER_PAGE;
             renderCards(filteredEmployeeData);
@@ -342,9 +570,7 @@
             }
         }
 
-
-        // --- Intersection Observer Logic for Lazy Loading ---
-
+        // --- Intersection Observer Logic (No change in core logic) ---
         const loadCard = (card) => {
             card.classList.add('visible');
             if (observer) {
@@ -364,7 +590,7 @@
                     }
                 });
             }, {
-                rootMargin: '200px 0px', 
+                rootMargin: '100px 0px',
                 threshold: 0.01
             });
             
@@ -375,12 +601,13 @@
 
 
         // --- Display and Filter Functions ---
-
         function populateDepartmentFilter(data) {
             const departments = new Set(data.map(item => item.department).filter(dep => dep && dep !== 'N/A'));
             departmentFilter.innerHTML = '<option value="">-- All Departments --</option>';
             
-            departments.forEach(dep => {
+            const sortedDepartments = Array.from(departments).sort();
+
+            sortedDepartments.forEach(dep => {
                 const option = document.createElement('option');
                 option.value = dep;
                 option.textContent = dep;
@@ -392,7 +619,6 @@
             const searchText = nameSearch.value.toLowerCase();
             const selectedDepartment = departmentFilter.value;
 
-            // 1. Filter the data fully
             let processedData = rawEmployeeData.filter(employee => {
                 const matchesSearch = 
                     (employee.nameKh || '').toLowerCase().includes(searchText) || 
@@ -405,35 +631,28 @@
                 return matchesSearch && matchesDepartment;
             });
             
-            // 2. Sort the filtered data
             processedData = sortData(processedData); 
             filteredEmployeeData = processedData;
 
-            // 3. Reset limit and scroll position if necessary
             if (resetLimit) {
                 currentCardLimit = CARDS_PER_PAGE;
-                if (resetScroll) {
-                    // Smoothly scroll to the top of the results area
-                    dataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
             }
 
-            // 4. Update the count display
             if (searchText || selectedDepartment) {
                 countDisplay.textContent = `${filteredEmployeeData.length} Staff Match Filters (Total: ${rawEmployeeData.length})`;
             } else {
                 countDisplay.textContent = `Total Staff: ${rawEmployeeData.length}`;
             }
 
-            // 5. Render the limited list
             renderCards(filteredEmployeeData);
         }
 
         function renderCards(data) {
             dataContainer.innerHTML = ''; 
+            dataContainer.classList.remove('loading');
 
             if (data.length === 0) {
-                dataContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #78716c;">No employees found matching the current filters.</p>';
+                dataContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #78716c; padding: 50px;">🤷‍♀️ No employees found matching the current filters.</p>';
                 showMoreBtn.style.display = 'none';
                 return;
             }
@@ -442,17 +661,22 @@
 
             limitedData.forEach(employee => {
                 const cardHTML = `
-                    <div class="employee-card lazy-card">
+                    <div class="employee-card lazy-card" tabindex="0">
                         <div class="card-image-container">
                             <img class="card-image" src="${employee.imageUrl}" alt="Image of ${employee.nameLatin}" loading="lazy">
                         </div>
+                        
                         <div class="card-content">
                             <div class="card-title">${employee.nameKh}</div>
                             <div class="card-subtitle">${employee.nameLatin}</div>
-                            <div class="card-detail"><strong>អត្ថលេខ DI:</strong> ${employee.idDi}</div>
-                            <div class="card-detail"><strong>ក្រុម DI:</strong> ${employee.groupDi}</div>
-                            <div class="card-detail"><strong>ភេទ:</strong> ${employee.gender}</div>
-                            <span class="card-tag">ផ្នែកការងារ: ${employee.department}</span>
+                            
+                            <div class="card-detail-group">
+                                <div class="card-detail"><i class="fas fa-id-card"></i> <strong>ID DI:</strong> ${employee.idDi}</div>
+                                <div class="card-detail"><i class="fas fa-layer-group"></i> <strong>Group DI:</strong> ${employee.groupDi}</div>
+                                <div class="card-detail"><i class="fas fa-venus-mars"></i> <strong>Gender:</strong> ${employee.gender}</div>
+                            </div>
+                            
+                            <span class="card-tag"><i class="fas fa-briefcase"></i> ${employee.department}</span>
                         </div>
                     </div>
                 `;
@@ -465,12 +689,11 @@
             setupObserver();
         }
 
-        // Attach event listeners to the filter inputs
-        nameSearch.addEventListener('input', () => filterAndRenderCards(true, true));
-        departmentFilter.addEventListener('change', () => filterAndRenderCards(true, true));
-        sortControl.addEventListener('change', () => filterAndRenderCards(true, true)); // NEW: Sorting event
+        // Attach event listeners (resetScroll set to false for smooth UX)
+        nameSearch.addEventListener('input', () => filterAndRenderCards(true, false)); 
+        departmentFilter.addEventListener('change', () => filterAndRenderCards(true, false)); 
+        sortControl.addEventListener('change', () => filterAndRenderCards(true, false)); 
 
-        // Run the function when the page loads
         document.addEventListener('DOMContentLoaded', fetchDataAndDisplay);
     </script>
 </body>
