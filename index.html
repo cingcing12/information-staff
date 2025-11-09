@@ -118,7 +118,7 @@
         .employee-card {
             background: #ffffff;
             border-radius: 16px;
-            border: 1px solid var(--color-border); /* Subtle initial border */
+            border: 1px solid var(--color-border); 
             overflow: hidden;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s, outline 0.3s;
@@ -126,18 +126,17 @@
             flex-direction: column;
             cursor: pointer;
             position: relative; 
-            /* padding-top: 50px;  */
             text-align: center;
         }
         /* Hover state polish */
         .employee-card:hover {
             transform: translateY(-5px); 
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
-            border-color: #a5c3f6; /* Subtle blue highlight on interaction */
+            border-color: #a5c3f6; 
         }
         /* Accessibility Focus State */
         .employee-card:focus-within {
-            outline: 4px solid rgba(26, 115, 232, 0.5); /* Prominent, accessible blue glow */
+            outline: 4px solid rgba(26, 115, 232, 0.5); 
             outline-offset: 2px;
         }
 
@@ -149,7 +148,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 80px; /* Area for the avatar to overlap */
+            height: 80px; 
             background-color: #f8faff; 
             border-bottom: 1px solid var(--color-border);
             z-index: 1; 
@@ -158,7 +157,7 @@
         /* Card Image/Avatar Container */
         .card-image-container {
             position: relative;
-            top: 5px; /* Position relative to the top of the card */
+            top: 5px; 
             left: 50%;
             transform: translateX(-50%);
             width: 100px; 
@@ -167,8 +166,8 @@
             overflow: hidden;
             background-color: #ffffff; 
             border: 5px solid white; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); /* Stronger shadow on the avatar */
-            z-index: 10; /* Bring avatar to the top layer */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); 
+            z-index: 10; 
         }
         .card-image {
             width: 100%;
@@ -192,7 +191,7 @@
             display: flex;
             flex-direction: column;
             align-items: center; 
-            z-index: 5; /* Ensure content is above the pseudo-header */
+            z-index: 5; 
         }
         .card-title { 
             font-size: 1.4em; 
@@ -392,7 +391,9 @@
             .navbar { flex-direction: column; gap: 5px; }
             h1 { font-size: 1.5em; }
         }
-       
+        @media (max-width: 450px) {
+            #data-container { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -462,6 +463,17 @@
         // Initialize Intersection Observer (global scope)
         let observer;
         
+        // --- UTILITY: DEBOUNCE FUNCTION (Performance Fix) ---
+        function debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
+        
         // --- Core Functions ---
         
         function parseCSV(csvText) {
@@ -469,11 +481,10 @@
             return rows.map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell ? cell.trim().replace(/^"|"$/g, '') : ''));
         }
 
-        // --- Skeleton Render Function (NEW) ---
+        // --- Skeleton Render Function (Unchanged) ---
         function renderSkeleton() {
             dataContainer.innerHTML = '';
             dataContainer.classList.add('loading');
-            // Determine how many skeletons to show based on screen size (default 6)
             const skeletonCount = window.innerWidth > 768 ? 6 : 4; 
             
             for (let i = 0; i < skeletonCount; i++) {
@@ -498,7 +509,6 @@
         }
 
         async function fetchDataAndDisplay() {
-            // Call the Skeleton Renderer
             renderSkeleton(); 
             
             try {
@@ -508,13 +518,14 @@
                 
                 const dataRows = dataArray.slice(ROWS_TO_SKIP);
                 
+                // **FIX: TRIM and UPPERCASE department name on ingest for strict deduplication**
                 rawEmployeeData = dataRows.map(row => ({
                     nameKh: row[COL_NAME_KH] || 'N/A',
                     idDi: row[COL_ID_DI] || 'N/A',
                     groupDi: row[COL_GROUP_DI] || 'N/A',
                     gender: row[COL_GENDER] || 'N/A',
                     nameLatin: row[COL_NAME_LATIN] || 'N/A',
-                    department: row[COL_DEPARTMENT] || 'N/A',
+                    department: (row[COL_DEPARTMENT] || 'N/A').trim().toUpperCase(), 
                     imageUrl: (row[COL_IMAGE_URL] || '').replace(/"/g, '').trim() || 'placeholder.jpg' 
                 })).filter(employee => employee.nameKh !== 'N/A' && employee.nameLatin !== 'N/A');
 
@@ -600,8 +611,10 @@
         };
 
 
-        // --- Display and Filter Functions ---
+        // --- FIX CONFIRMED: Department filter deduplication is correct ---
         function populateDepartmentFilter(data) {
+            // Because department names are now consistently UPPERCASE and trimmed, 
+            // the Set guarantees only one entry per unique department.
             const departments = new Set(data.map(item => item.department).filter(dep => dep && dep !== 'N/A'));
             departmentFilter.innerHTML = '<option value="">-- All Departments --</option>';
             
@@ -609,22 +622,29 @@
 
             sortedDepartments.forEach(dep => {
                 const option = document.createElement('option');
-                option.value = dep;
-                option.textContent = dep;
+                option.value = dep; // E.g., "IT SUPPORT"
+                option.textContent = dep; // E.g., "IT SUPPORT"
                 departmentFilter.appendChild(option);
             });
         }
 
         function filterAndRenderCards(resetLimit = true, resetScroll = false) {
-            const searchText = nameSearch.value.toLowerCase();
-            const selectedDepartment = departmentFilter.value;
+            // **Search text must be standardized to UPPERCASE to match data**
+            const searchText = nameSearch.value.toUpperCase();
+            const selectedDepartment = departmentFilter.value; // Already UPPERCASE from populateFilter
 
             let processedData = rawEmployeeData.filter(employee => {
+                // employee.department is already the standardized UPPERCASE string
+                
+                // Case-insensitive search on Name/ID/Department
                 const matchesSearch = 
-                    (employee.nameKh || '').toLowerCase().includes(searchText) || 
-                    (employee.nameLatin || '').toLowerCase().includes(searchText) ||
-                    (employee.idDi || '').toLowerCase().includes(searchText);
+                    (employee.nameKh || '').toUpperCase().includes(searchText) || 
+                    (employee.nameLatin || '').toUpperCase().includes(searchText) ||
+                    (employee.idDi || '').toUpperCase().includes(searchText) ||
+                    (employee.department || '').includes(searchText);
 
+
+                // Department filter match against the standardized string
                 const matchesDepartment = 
                     !selectedDepartment || employee.department === selectedDepartment;
                 
@@ -689,8 +709,13 @@
             setupObserver();
         }
 
-        // Attach event listeners (resetScroll set to false for smooth UX)
-        nameSearch.addEventListener('input', () => filterAndRenderCards(true, false)); 
+        // --- ATTACH EVENT LISTENERS (Applying Debounce) ---
+        const debouncedFilter = debounce(filterAndRenderCards, 300);
+
+        // Name search uses the debounced function
+        nameSearch.addEventListener('input', () => debouncedFilter(true, false)); 
+        
+        // Department and Sort controls trigger immediately (as they are discrete changes)
         departmentFilter.addEventListener('change', () => filterAndRenderCards(true, false)); 
         sortControl.addEventListener('change', () => filterAndRenderCards(true, false)); 
 
