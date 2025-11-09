@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Directory - Card View (Fully Featured)</title>
+    
+    <style>
+        /* --- General Layout & Fonts --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8; /* Softer background */
+        }
+        
+        /* --- Header Improvements --- */
+        .header-container {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0; /* Subtle separator */
+        }
+        h1 {
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            font-weight: 700; /* Heavier font weight */
+        }
+        #staff-count-display {
+            font-size: 1.1em;
+            color: #4b5563;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* --- Filters Container Improvements --- */
+        #filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* Increased gap */
+            margin-bottom: 40px;
+            padding: 20px; /* Increased padding */
+            background-color: #ffffff;
+            border-radius: 12px; /* Softer corners */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* Stronger but softer shadow */
+            align-items: flex-end; /* Align inputs/selects to the bottom */
+            justify-content: center;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 240px; /* Slightly wider filter boxes */
+        }
+        .filter-group label {
+            font-weight: 600; /* Bolder label */
+            color: #334155;
+            margin-bottom: 6px;
+            font-size: 0.95em;
+        }
+        .filter-group input, .filter-group select {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px; /* Slightly more rounded */
+            font-size: 1em;
+            transition: all 0.3s;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06); /* Inner shadow for depth */
+        }
+        .filter-group input:focus, .filter-group select:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        /* --- Card Grid Layout --- */
+        #data-container {
+            /* Default: Fit as many 320px cards as possible */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 25px; /* Increased gap */
+            margin-bottom: 30px;
+        }
+        
+        /* 📱 MOBILE OPTIMIZATION: TWO CARDS IN SMALL RESPONSIVE VIEW */
+        /* Targets screens up to 768px wide (standard tablet portrait/large phone) */
+        @media (max-width: 768px) {
+            #data-container {
+                /* Force two columns, or one if the screen is too small */
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+                gap: 15px; /* Reduce gap on small screens */
+            }
+            .filter-group {
+                min-width: 100%; /* Make filters stack cleanly */
+            }
+            body {
+                padding: 10px; /* Reduce overall padding */
+            }
+            /* Ensure cards have space on narrowest screens (below 400px) */
+            @media (max-width: 450px) {
+                #data-container {
+                    grid-template-columns: 1fr; /* Force single column on very narrow screens */
+                }
+            }
+        }
+        /* END MOBILE OPTIMIZATION */
+
+
+        #data-container.loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #6b7280;
+            padding: 50px;
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+        }
+        
+        /* --- Individual Card Styling (Lazy Load) --- */
+        .employee-card {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0; /* Subtle border */
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Elevated shadow */
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .employee-card:hover {
+            transform: translateY(-8px); /* More noticeable lift */
+            box-shadow: 0 18px 25px rgba(0, 0, 0, 0.2);
+        }
+        .lazy-card {
+            opacity: 0;
+            transform: translateY(30px); /* Slower, more dramatic slide-up */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out, box-shadow 0.3s;
+        }
+        .lazy-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Card Image (No major change, ensure sharp fit) */
+        .card-image-container {
+            height: 220px; /* Slightly taller image area */
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-image[src="placeholder.jpg"] { content: none; display: block; position: relative; }
+        .card-image[src="placeholder.jpg"]::before {
+             content: 'No Photo Available';
+             display: flex; justify-content: center; align-items: center;
+             width: 100%; height: 100%; color: #9ca3af; font-size: 1.2em;
+        }
+        .card-content { padding: 25px; flex-grow: 1; }
+        .card-title { font-size: 1.6em; font-weight: 800; color: #1f2937; margin-bottom: 5px; }
+        .card-subtitle { font-size: 1.1em; color: #64748b; margin-bottom: 18px; }
+        .card-detail { margin-bottom: 8px; font-size: 0.95em; color: #374151; }
+        .card-detail strong { color: #111827; min-width: 120px; display: inline-block; }
+        .card-tag { 
+            background-color: #0d9488; /* Teal/cyan for a fresh look */
+            padding: 6px 12px;
+            font-size: 0.9em;
+            border-radius: 6px;
+        }
+
+        /* --- Show More Button Style --- */
+        #show-more-container {
+            text-align: center;
+            padding: 30px 0 50px 0;
+            display: flex;
+            justify-content: center;
+        }
+        #show-more-btn {
+            padding: 14px 35px;
+            font-size: 1.1em;
+            font-weight: 600;
+            background-color: #10b981; 
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+            display: none;
+        }
+        #show-more-btn:hover {
+            background-color: #059669;
+            box-shadow: 0 8px 15px rgba(16, 185, 129, 0.5);
+        }
+        #show-more-btn:focus {
+             outline: 3px solid #6ee7b7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>🏢 Employee Directory | បញ្ជីបុគ្គលិក</h1>
+        <span id="staff-count-display">Loading staff count...</span>
+    </div>
+
+    <div id="filter-container">
+        <div class="filter-group">
+            <label for="name-search">Search Name/ID (ឈ្មោះ/អត្ថលេខ)</label>
+            <input type="text" id="name-search" placeholder="Enter name or ID...">
+        </div>
+        <div class="filter-group">
+            <label for="department-filter">Filter by Department (ផ្នែកការងារ)</label>
+            <select id="department-filter">
+                <option value="">-- All Departments --</option>
+                </select>
+        </div>
+        <div class="filter-group">
+            <label for="sort-control">Sort By</label>
+            <select id="sort-control">
+                <option value="nameKh">Name (Khmer) A-Z</option>
+                <option value="nameLatin">Name (Latin) A-Z</option>
+                <option value="idDi">ID Ascending</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="data-container" class="loading">Loading data...</div> 
+    
+    <div id="show-more-container">
+        <button id="show-more-btn" onclick="showMoreCards()">Show 50 More Staff</button>
+    </div>
+
+    <script>
+        // ** CSV Configuration **
+        const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRny6z0kXP2O7d1Yl4tUk0m9J-vo-Ebw72MZIm5Nq2veCqFu18F-0Wgj06XeKyhABjbG1jQmWyQd-Sa/pub?gid=1542294647&single=true&output=csv';
+        const dataContainer = document.getElementById('data-container');
+        const nameSearch = document.getElementById('name-search');
+        const departmentFilter = document.getElementById('department-filter');
+        const countDisplay = document.getElementById('staff-count-display');
+        const showMoreBtn = document.getElementById('show-more-btn');
+        const sortControl = document.getElementById('sort-control');
+        
+        let rawEmployeeData = [];
+        let filteredEmployeeData = [];
+        
+        // ** Pagination Variables **
+        const CARDS_PER_PAGE = 50;
+        let currentCardLimit = CARDS_PER_PAGE; 
+
+        // ** 🔑 COLUMN INDEX MAPPING (0-based) **
+        const COL_NAME_KH = 11;     
+        const COL_ID_DI = 4;        
+        const COL_GROUP_DI = 6;     
+        const COL_GENDER = 13;      
+        const COL_NAME_LATIN = 12;  
+        const COL_DEPARTMENT = 18;  
+        const COL_IMAGE_URL = 36;   
+        const ROWS_TO_SKIP = 8;     
+
+        // Initialize Intersection Observer (global scope)
+        let observer;
+        
+        // --- Core Functions ---
+        
+        function parseCSV(csvText) {
+            const rows = csvText.split('\n').filter(row => row.trim() !== '');
+            return rows.map(row => row.split(',').map(cell => cell ? cell.trim() : ''));
+        }
+
+        async function fetchDataAndDisplay() {
+            try {
+                dataContainer.classList.add('loading');
+                const response = await fetch(GOOGLE_SHEETS_URL);
+                const csvText = await response.text();
+                const dataArray = parseCSV(csvText);
+                
+                const dataRows = dataArray.slice(ROWS_TO_SKIP);
+                
+                rawEmployeeData = dataRows.map(row => ({
+                    nameKh: row[COL_NAME_KH] || 'N/A',
+                    idDi: row[COL_ID_DI] || 'N/A',
+                    groupDi: row[COL_GROUP_DI] || 'N/A',
+                    gender: row[COL_GENDER] || 'N/A',
+                    nameLatin: row[COL_NAME_LATIN] || 'N/A',
+                    department: row[COL_DEPARTMENT] || 'N/A',
+                    imageUrl: (row[COL_IMAGE_URL] || '').replace(/"/g, '') || 'placeholder.jpg' 
+                })).filter(employee => employee.nameKh !== 'N/A');
+
+                countDisplay.textContent = `Total Staff: ${rawEmployeeData.length}`;
+                
+                populateDepartmentFilter(rawEmployeeData);
+                // Initial render: do not reset limit or scroll
+                filterAndRenderCards(false, false); 
+                dataContainer.classList.remove('loading');
+
+            } catch (error) {
+                console.error('Error fetching or processing sheet data:', error);
+                countDisplay.textContent = 'Error loading data.';
+                dataContainer.innerHTML = 'Error loading data. Check the browser console and CSV link.';
+                dataContainer.classList.remove('loading');
+            }
+        }
+        
+        // --- Sorting Function ---
+        function sortData(data) {
+            const sortBy = sortControl.value;
+
+            data.sort((a, b) => {
+                const valA = (a[sortBy] || '').toUpperCase();
+                const valB = (b[sortBy] || '').toUpperCase();
+
+                if (sortBy === 'idDi') {
+                    // Treat ID as numbers for accurate sorting (if possible)
+                    const numA = parseInt(valA.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(valB.replace(/\D/g, '')) || 0;
+                    return numA - numB;
+                } else {
+                    // Standard string comparison for names
+                    if (valA < valB) return -1;
+                    if (valA > valB) return 1;
+                    return 0;
+                }
+            });
+            return data;
+        }
+        
+        // --- Pagination Logic ---
+        
+        function showMoreCards() {
+            currentCardLimit += CARDS_PER_PAGE;
+            renderCards(filteredEmployeeData);
+        }
+
+        function updateShowMoreButton() {
+            if (filteredEmployeeData.length > currentCardLimit) {
+                showMoreBtn.style.display = 'block';
+                const remaining = filteredEmployeeData.length - currentCardLimit;
+                const showCount = Math.min(CARDS_PER_PAGE, remaining);
+                showMoreBtn.textContent = `Show ${showCount} More Staff (Remaining: ${remaining})`;
+            } else {
+                showMoreBtn.style.display = 'none';
+            }
+        }
+
+
+        // --- Intersection Observer Logic for Lazy Loading ---
+
+        const loadCard = (card) => {
+            card.classList.add('visible');
+            if (observer) {
+                observer.unobserve(card);
+            }
+        };
+
+        const setupObserver = () => {
+            if (observer) {
+                observer.disconnect();
+            }
+            
+            observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        loadCard(entry.target);
+                    }
+                });
+            }, {
+                rootMargin: '200px 0px', 
+                threshold: 0.01
+            });
+            
+            document.querySelectorAll('.lazy-card').forEach(card => {
+                observer.observe(card);
+            });
+        };
+
+
+        // --- Display and Filter Functions ---
+
+        function populateDepartmentFilter(data) {
+            const departments = new Set(data.map(item => item.department).filter(dep => dep && dep !== 'N/A'));
+            departmentFilter.innerHTML = '<option value="">-- All Departments --</option>';
+            
+            departments.forEach(dep => {
+                const option = document.createElement('option');
+                option.value = dep;
+                option.textContent = dep;
+                departmentFilter.appendChild(option);
+            });
+        }
+
+        function filterAndRenderCards(resetLimit = true, resetScroll = false) {
+            const searchText = nameSearch.value.toLowerCase();
+            const selectedDepartment = departmentFilter.value;
+
+            // 1. Filter the data fully
+            let processedData = rawEmployeeData.filter(employee => {
+                const matchesSearch = 
+                    (employee.nameKh || '').toLowerCase().includes(searchText) || 
+                    (employee.nameLatin || '').toLowerCase().includes(searchText) ||
+                    (employee.idDi || '').toLowerCase().includes(searchText);
+
+                const matchesDepartment = 
+                    !selectedDepartment || employee.department === selectedDepartment;
+                
+                return matchesSearch && matchesDepartment;
+            });
+            
+            // 2. Sort the filtered data
+            processedData = sortData(processedData); 
+            filteredEmployeeData = processedData;
+
+            // 3. Reset limit and scroll position if necessary
+            if (resetLimit) {
+                currentCardLimit = CARDS_PER_PAGE;
+                if (resetScroll) {
+                    // Smoothly scroll to the top of the results area
+                    dataContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            // 4. Update the count display
+            if (searchText || selectedDepartment) {
+                countDisplay.textContent = `${filteredEmployeeData.length} Staff Match Filters (Total: ${rawEmployeeData.length})`;
+            } else {
+                countDisplay.textContent = `Total Staff: ${rawEmployeeData.length}`;
+            }
+
+            // 5. Render the limited list
+            renderCards(filteredEmployeeData);
+        }
+
+        function renderCards(data) {
+            dataContainer.innerHTML = ''; 
+
+            if (data.length === 0) {
+                dataContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #78716c;">No employees found matching the current filters.</p>';
+                showMoreBtn.style.display = 'none';
+                return;
+            }
+
+            const limitedData = data.slice(0, currentCardLimit);
+
+            limitedData.forEach(employee => {
+                const cardHTML = `
+                    <div class="employee-card lazy-card">
+                        <div class="card-image-container">
+                            <img class="card-image" src="${employee.imageUrl}" alt="Image of ${employee.nameLatin}" loading="lazy">
+                        </div>
+                        <div class="card-content">
+                            <div class="card-title">${employee.nameKh}</div>
+                            <div class="card-subtitle">${employee.nameLatin}</div>
+                            <div class="card-detail"><strong>អត្ថលេខ DI:</strong> ${employee.idDi}</div>
+                            <div class="card-detail"><strong>ក្រុម DI:</strong> ${employee.groupDi}</div>
+                            <div class="card-detail"><strong>ភេទ:</strong> ${employee.gender}</div>
+                            <span class="card-tag">ផ្នែកការងារ: ${employee.department}</span>
+                        </div>
+                    </div>
+                `;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = cardHTML.trim();
+                dataContainer.appendChild(tempDiv.firstChild);
+            });
+            
+            updateShowMoreButton();
+            setupObserver();
+        }
+
+        // Attach event listeners to the filter inputs
+        nameSearch.addEventListener('input', () => filterAndRenderCards(true, true));
+        departmentFilter.addEventListener('change', () => filterAndRenderCards(true, true));
+        sortControl.addEventListener('change', () => filterAndRenderCards(true, true)); // NEW: Sorting event
+
+        // Run the function when the page loads
+        document.addEventListener('DOMContentLoaded', fetchDataAndDisplay);
+    </script>
+</body>
+</html>
